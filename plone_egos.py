@@ -6,7 +6,7 @@ import os
 import glob
 
 TEMPLATE_DIR = '/home/snackunderflow/pyclasstwitter/templates'
-WEB_DIR = '/home/snackunderflow/'
+WEB_DIR = '/home/snackunderflow/www'
 
 HTML_PAGE_STARTS_WITH = 'hashtag_page'
 FILE_SUFFIX = '.html'
