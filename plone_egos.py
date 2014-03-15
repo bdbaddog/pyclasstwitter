@@ -6,7 +6,7 @@ import os
 import glob
 
 TEMPLATE_DIR = '/home/snackunderflow/pyclasstwitter/templates'
-WEB_DIR = '/home/snackunderflow/www'
+WEB_DIR = '/home/snackunderflow/'
 
 HTML_PAGE_STARTS_WITH = 'hashtag_page'
 FILE_SUFFIX = '.html'
@@ -134,7 +134,7 @@ def prepare_html_pages(tweets, tweets_per_page, directory):
 
     # If no tweets, generate a generic index page
     if not list_of_tweet_pages:
-        with open(os.path.join(TEMPLATE_DIR,"index.html"), 'rb') as in_file:
+        with open(os.path.join(TEMPLATE_DIR, "index.html"), 'rb') as in_file:
             with open (os.path.join(WEB_DIR, 'index.html'), 'wb') as out_file:
                 out_file.write(in_file.read())
         return
