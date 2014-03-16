@@ -9,7 +9,7 @@ import glob
 import ConfigParser
 
 config = ConfigParser.RawConfigParser()
-config.read('secrets.cfg')
+config.read('/home/snackunderflow/pyclasstwitter/secrets.cfg')
 APP_KEY = config.get('secrets','APP_KEY')
 APP_SECRET = config.get('secrets','APP_SECRET')
 ACCESS_TOKEN = config.get('secrets','ACCESS_TOKEN')
