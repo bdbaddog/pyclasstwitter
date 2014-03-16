@@ -15,7 +15,7 @@ APP_SECRET = config.get('secrets','APP_SECRET')
 ACCESS_TOKEN = config.get('secrets','ACCESS_TOKEN')
 
 TEMPLATE_DIR = '/home/snackunderflow/pyclasstwitter/templates'
-WEB_DIR = '/home/snackunderflow/'
+WEB_DIR = '/home/snackunderflow/www'
 
 #TEMPLATE_DIR = '/Users/bdbaddog/devel/pyclasstwitter/templates'
 #WEB_DIR = '/tmp/'
