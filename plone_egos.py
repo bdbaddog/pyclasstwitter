@@ -1,26 +1,37 @@
+#!/usr/bin/env python
+from twython import Twython
 import requests
 import urllib
 import pprint
 from jinja2 import Environment, FileSystemLoader
 import os
 import glob
+import ConfigParser
+
+config = ConfigParser.RawConfigParser()
+config.read('secrets.cfg')
+APP_KEY = config.get('secrets','APP_KEY')
+APP_SECRET = config.get('secrets','APP_SECRET')
+ACCESS_TOKEN = config.get('secrets','ACCESS_TOKEN')
 
 TEMPLATE_DIR = '/home/snackunderflow/pyclasstwitter/templates'
 WEB_DIR = '/home/snackunderflow/'
+
+#TEMPLATE_DIR = '/Users/bdbaddog/devel/pyclasstwitter/templates'
+#WEB_DIR = '/tmp/'
 
 HTML_PAGE_STARTS_WITH = 'hashtag_page'
 FILE_SUFFIX = '.html'
 
 TWEETS_PER_PAGE = 10
+pp = pprint.PrettyPrinter(indent=2)
 
 # debug aid
 def print_tweets_to_screen(tweets):
-    pp = pprint.PrettyPrinter(indent=2)
     pp.pprint(tweets)
 
 def print_tweets_to_file(tweets, file_name):
     with open(file_name, 'wb') as f:
-        pp = pprint.PrettyPrinter(indent=2)
         f.write(pp.pformat(tweets))
 
 # ---
@@ -57,56 +68,48 @@ def remove_files(directory, suffix):
 
 def get_tweets(hashtag):
     print "Retrieving tweets..."
+
+    twitter = Twython(APP_KEY, access_token=ACCESS_TOKEN)
+
+    tweets = twitter.search(q=hashtag,count=150)
     tweet_list = []
-    search_url = "http://search.twitter.com/search.json?q=%23{0}&include_entities=true".format(hashtag)
 
-    next_page = True
-    # Twitter api only serves 15 tweets per request. If json object has 'next_page' value keep
-    # loading pages, otherwise stop
-    while next_page:
-        fp = requests.get(search_url)
-        tweets = fp.json()
+    for tweet in tweets['statuses']:
+        if tweet['text'][:2] == 'RT':
+            continue
+        each_tweet = {}
+        each_tweet['text'] = tweet['text']
+        each_tweet['screen_name'] = tweet['user']['screen_name']
+        each_tweet['real_name'] = tweet['user']['name']
+        each_tweet['profile_image'] = tweet['user']['profile_image_url']
+        each_tweet['id'] = tweet['id']
+        each_tweet['created_at'] = tweet['created_at'][5:12] + '--' + tweet['created_at'][16:25]
 
-        for tweet in tweets['results']:
-            if tweet['text'][:2] == 'RT':
-                continue
-            each_tweet = {}
-            each_tweet['text'] = tweet['text']
-            each_tweet['screen_name'] = tweet['from_user']
-            each_tweet['real_name'] = tweet['from_user_name']
-            each_tweet['profile_image'] = tweet['profile_image_url']
-            each_tweet['id'] = tweet['id']
-            each_tweet['created_at'] = tweet['created_at'][5:12] + '--' + tweet['created_at'][16:25]
+        # list contains link info dicts
+        each_tweet['links'] = []
 
-            # list contains link info dicts
-            each_tweet['links'] = []
+        # add any media link, note that twitter only supports one media per tweet
+        if 'media' in tweet['entities']:
+            each_tweet['media_url'] = tweet['entities']['media'][0]['media_url']
+            link = {}
+            link['display_url'] = tweet['entities']['media'][0]['url']
+            link['resource_url'] = tweet['entities']['media'][0]['media_url']
+            link['indices'] = tweet['entities']['media'][0]['indices']
+            each_tweet['links'].append(link)
 
-            # add any media link, note that twitter only supports one media per tweet
-            if 'media' in tweet['entities']:
-                each_tweet['media_url'] = tweet['entities']['media'][0]['media_url']
-                link = {}
-                link['display_url'] = tweet['entities']['media'][0]['url']
-                link['resource_url'] = tweet['entities']['media'][0]['media_url']
-                link['indices'] = tweet['entities']['media'][0]['indices']
+        # add links from the url section
+#        pp.pprint(tweet['entities'])
+        if tweet['entities']['urls']:
+            link = {}
+            for url in tweet['entities']['urls']:
+                link['display_url'] = url['url']
+                link['resource_url'] = url['expanded_url']
+                link['indices'] = url['indices']
                 each_tweet['links'].append(link)
 
-            # add links from the url section
-            if tweet['entities']['urls']:
-                link = {}
-                for url in tweet['entities']['urls']:
-                    link['display_url'] = url['url']
-                    link['resource_url'] = url['expanded_url']
-                    link['indices'] = url['indices']
-                    each_tweet['links'].append(link)
+        # add tweet object to tweet list
+        tweet_list.append(each_tweet)
 
-            # add tweet object to tweet list
-            tweet_list.append(each_tweet)
-
-        # next page
-        if 'next_page' in tweets:
-            search_url = "http://search.twitter.com/search.json{0}".format(tweets['next_page'])
-        else:
-            next_page = False
 
     return tweet_list
 
